@@ -1,0 +1,1 @@
+# svitla-odoo18-attachment-demo
