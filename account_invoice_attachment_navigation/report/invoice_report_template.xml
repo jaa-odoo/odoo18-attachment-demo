@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit the standard invoice report template to inject attachment markers -->
+    <template id="report_invoice_document_dynamic_attachment" inherit_id="account.report_invoice_document">
+        <xpath expr="//tbody[hasclass('invoice_tbody')]//tr//td[@name='account_invoice_line_name']" position="inside">
+            <br />
+            <t t-set="global_counter" t-value="global_counter or 0" /> <!-- Initialize global counter if it's not set -->
+            <span t-if="line.attachments_ids">
+                <t t-foreach="line.attachments_ids" t-as="attachment">
+                    <t t-set="global_counter" t-value="global_counter + 1" /> <!-- Increment global counter -->
+                    <span style="color: blue;">
+                        Attachment_<t t-esc="global_counter" />
+                    </span>
+                    <br />
+                </t>
+            </span>
+        </xpath>
+    </template>
+    <!-- A minimal QWeb PDF template to render image attachments for each invoice line -->
+    <template id="report_invoice_document_dynamic_sheet_img">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.basic_layout">
+                    <!-- Check if the attachment is an image -->
+                    <div t-if="attachment and attachment.mimetype.startswith('image/')">
+                        <h3>
+                            <span t-out="attachment.res_name">Attachment Name</span>
+                        </h3>
+                        <img t-att-src="attachment.image_src" class="img-fluid" />
+                    </div>
+                    <!-- For non-image files, display a download message -->
+                    <div t-elif="attachment and not attachment.mimetype.startswith('image/')">
+                        <h3>
+                            <span t-out="attachment.res_name">Attachment Name</span>
+                        </h3>
+                        <p>
+                            This file is a <span t-out="attachment.mimetype" /> file.
+                            <a t-att-href="attachment.url" target="_blank">Click here to download</a>.
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+    <!-- Report action to allow rendering image attachments as standalone QWeb reports -->
+    <record id="action_report_invoice_document_dynamic_sheet_img" model="ir.actions.report">
+        <field name="name">Invoice Attachment Image</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">account_invoice_attachment_navigation.report_invoice_document_dynamic_sheet_img</field>
+        <field name="report_file">account_invoice_attachment_navigation.report_invoice_document_dynamic_sheet_img</field>
+    </record>
+</odoo>
